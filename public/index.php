@@ -4,6 +4,8 @@
  */
 
 require '../vendor/autoload.php';
+require '../app/request-limit.php';
+startLimit();
 
 function getHTML($mdContent){
     $styleFileData = file_get_contents('../github.css');
