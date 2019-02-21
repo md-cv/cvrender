@@ -6,19 +6,47 @@
 require '../vendor/autoload.php';
 require '../app/request-limit.php';
 startLimit();
-
+function getStyle(){
+    return file_get_contents('../github.css');
+}
 function getHTML($mdContent){
-    $styleFileData = file_get_contents('../github.css');
-    $style = "<style>{$styleFileData}</style>";
-    $content = (new Parsedown())->text($mdContent);
-    return $style.$content;
+    $html =  (new Parsedown())->text($mdContent);
+//    return $html;
+    return '<div class="markdown-body">'.$html.'</div>';
 }
 function render($fileName, $mdContent){
-    $mpdf = new \Mpdf\Mpdf(['tempDir'=> sys_get_temp_dir()]);
+    $defaultConfig = (new Mpdf\Config\ConfigVariables())->getDefaults();
+    $fontDirs = $defaultConfig['fontDir'];
+
+    $defaultFontConfig = (new Mpdf\Config\FontVariables())->getDefaults();
+    $fontData = $defaultFontConfig['fontdata'];
+
+    $option = [
+        'tempDir'=> sys_get_temp_dir(),
+        'fontDir' => array_merge($fontDirs, [
+            dirname(dirname(__FILE__)). '/fonts',
+        ]),
+        'fontdata' => $fontData + [
+                'simsun' => [
+                    'R' => 'simsun.ttf',
+                    'I' => 'simsun.ttf',
+                    'B'=>'simsun.bold.ttf',
+                 ]
+            ],
+        'default_font' => 'simsun'
+    ];
+
+    $mpdf = new \Mpdf\Mpdf($option);
     $mpdf->SetDisplayMode('fullpage');
+    $mpdf->useAdobeCJK = true;
+    $mpdf->autoVietnamese = true;
     $mpdf->autoLangToFont = true;
     $mpdf->autoScriptToLang = true;
-    $mpdf->WriteHTML(getHTML($mdContent));
+    $mpdf->autoArabic = true;
+    $mpdf->ignore_invalid_utf8 = true;
+    $mpdf->ignorefollowingspaces = true;
+    $mpdf->WriteHTML(getStyle(),\Mpdf\HTMLParserMode::HEADER_CSS);
+    $mpdf->WriteHTML(getHTML($mdContent),\Mpdf\HTMLParserMode::HTML_BODY);
     $mpdf->Output($fileName .'.pdf',\Mpdf\Output\Destination::DOWNLOAD);
 }
 
