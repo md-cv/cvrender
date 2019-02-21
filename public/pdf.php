@@ -14,7 +14,7 @@ function getHTML($mdContent){
     return $style.$content;
 }
 function render($fileName, $mdContent){
-    $mpdf = new \Mpdf\Mpdf();
+    $mpdf = new \Mpdf\Mpdf(['tempDir'=> sys_get_temp_dir()]);
     $mpdf->SetDisplayMode('fullpage');
     $mpdf->autoLangToFont = true;
     $mpdf->autoScriptToLang = true;
